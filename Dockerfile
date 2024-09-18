@@ -4,7 +4,7 @@ FROM centos:7
 LABEL Description="Dockerfile to containerize an apache app"
 
 # Update all packages
-RUN apt-get -y update
+RUN apt-get update
 
 # Install apache on the container 
 RUN apt-get install -y httpd
