@@ -7,7 +7,7 @@ LABEL Description="Dockerfile to containerize an apache app"
 RUN apt-get update
 
 # Install apache on the container 
-RUN apt-get install httpd
+RUN apt install apache2 -y
 
 # copy the app + dependencies inside the container
 COPY index.html /var/www/html
