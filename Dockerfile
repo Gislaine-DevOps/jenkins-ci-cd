@@ -1,22 +1,10 @@
-FROM ubuntu
+FROM httpd:2.4
 
 # Description
 LABEL Description="Dockerfile to containerize an apache app"
 
-# Update all packages
-RUN apt-get update
-
-# Install apache on the container 
-RUN apt install apache2 -y
-
 # copy the app + dependencies inside the container
-COPY index.html /var/www/html
+COPY app/  /usr/local/apache2/htdocs/
 
 # Port on which the container will listening on 
 EXPOSE 80
-
-# systemctl start/enable httpd
-ENTRYPOINT [ "/usr/sbin/httpd" ]
-
-# Run the container in background
-CMD [ "-D", "FOREGROUND" ] 
