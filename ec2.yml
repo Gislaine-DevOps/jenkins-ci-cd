@@ -43,29 +43,6 @@ Resources:
           
           # Install required plugins for Docker 
           sudo /usr/lib/jenkins/plugins/cli/jenkins-cli.jar install-plugin docker-workflow pipeline-aws -deploy
-  
-  MyEC2Role:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: MyEC2Role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: LoggingPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: '*'
 
   JenkinsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
