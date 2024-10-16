@@ -15,34 +15,37 @@ Resources:
     Type: AWS::EC2::Instance
     Properties: 
       InstanceType: !Ref InstanceType
-      ImageId: ami-050cd642fd83388e4 
+      ImageId: ami-0ea3c35c5c3284d82 
       KeyName: docker-key
       SecurityGroupIds:
         - !Ref JenkinsSecurityGroup
       UserData: 
         Fn::Base64: !Sub |
           #!/bin/bash
-          # Install Docker
-          yum update -y
-          amazon-linux-extras install docker -y
-          service docker start
-          usermod -aG docker ec2-user
-          
-          # Install Java
-          yum install -y java-1.8.0-openjdk
+          sudo apt update -y
+          sudo apt install -y fontconfig openjdk-17-jre
+          java -version
 
-          # Install Jenkins
-          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat/jenkins.repo
-          rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
-          yum install jenkins -y
-          service jenkins start
+          sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+          https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+          echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+          https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+          /etc/apt/sources.list.d/jenkins.list > /dev/null
+          sudo apt-get update -y
+          sudo apt-get install jenkins -y
 
-          # Set up Jenkins initial admin password
-          sleep 60
-          echo "Jenkins setup complete. Access Jenkins at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080"
-          
-          # Install required plugins for Docker 
-          sudo /usr/lib/jenkins/plugins/cli/jenkins-cli.jar install-plugin docker-workflow pipeline-aws -deploy
+          for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+          # Add Docker's official GPG key:
+          sudo apt-get update -y
+          sudo apt-get install ca-certificates curl -y
+          sudo install -m 0755 -d /etc/apt/keyrings 
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+          # Add the repository to Apt sources:
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update -y
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
   JenkinsSecurityGroup:
     Type: AWS::EC2::SecurityGroup
