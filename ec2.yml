@@ -1,1 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to set up EC2 with Docker and Jenkins
+
+Parameters:
+  InstanceType:
+    Description: The EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+
+Resources:
+  JenkinsInstance:
+    Type: AWS::EC2::Instance
+    Properties: 
+      InstanceType: !Ref InstanceType
+      ImageId: ami-050cd642fd83388e4 
+      KeyName: docker-key
+      SecurityGroupIds:
+        - !Ref JenkinsSecurityGroup
+      UserData: 
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          # Install Docker
+          yum update -y
+          amazon-linux-extras install docker -y
+          service docker start
+          usermod -aG docker ec2-user
+          
+          # Install Java
+          yum install -y java-1.8.0-openjdk
+
+          # Install Jenkins
+          wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat/jenkins.repo
+          rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+          yum install jenkins -y
+          service jenkins start
+
+          # Set up Jenkins initial admin password
+          sleep 60
+          echo "Jenkins setup complete. Access Jenkins at http://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4):8080"
+          
+          # Install required plugins for Docker 
+          sudo /usr/lib/jenkins/plugins/cli/jenkins-cli.jar install-plugin docker-workflow pipeline-aws -deploy
+
+  JenkinsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: Allow HTTP, Jenkins, and SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 # Change this for better security
+
+  JenkinsEIP:
+    Type: AWS::EC2::EIP
+
+  JenkinsEIPAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref JenkinsInstance
+      EIP: !Ref JenkinsEIP
+
+Outputs:
+  JenkinsURL:
+    Description: "URL for Jenkins"
+    Value: !Sub "http://${JenkinsEIP}:8080"
 
