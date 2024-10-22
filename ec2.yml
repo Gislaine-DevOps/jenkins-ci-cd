@@ -63,7 +63,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0 # Change this for better security
+          CidrIp: 0.0.0.0/0 
 
   JenkinsEIP:
     Type: AWS::EC2::EIP
