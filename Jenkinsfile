@@ -5,7 +5,7 @@ pipeline {
             stage('Build') {
                 steps {
                     echo 'This is Build Stage'
-                    sh "docker build -t notes-app ."
+                    sh "docker build -t notes-app-cicd ."
                 }
             }
             stage('Push to Docker hub') {
