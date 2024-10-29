@@ -24,7 +24,7 @@ pipeline {
                     echo 'Deploying container'
                     sh "docker ps -a"
                     sh "docker rm -f notes-app-container"
-                    sh "docker run -d --name notes-app-container -p 80:80 notes-app"
+                    sh "docker run -d --name notes-app-container -p 80:80 notes-app-cicd"
                 }
             }
         }
